@@ -19,7 +19,7 @@ main_func <- function(group, n_patients, n_measure_o, n_measure_r, beta_delta,
                       seed = 123, rep = 1) {
   # model_type: 1 for robust smm; 2 for gmm and variants
   if (group == "trt") {
-    sd_r <- c(2, 1)
+    sd_r <- c(2.5, 1)
     if (DGM_type == 1) beta <- c(0.20, -4.0, 0.10) else if (DGM_type == 2) beta <- c(-16.5, -30, -17)
   } else if (group == "ctrl") {
     beta <- c(0.10, -0.7, 0.05)
@@ -30,12 +30,12 @@ main_func <- function(group, n_patients, n_measure_o, n_measure_r, beta_delta,
     corr_r <- 0.3
     rho_ar1 <- NA
     # sd_eps = c(4, sqrt(20))
-    sd_eps = c(6, sqrt(40))
+    sd_eps = c(4, 5)
   } else if (error_type == 2) {
     corr_r <- 0.1
     # sd_r <- c(1, 1) # replaced in AR error
     rho_ar1 <- c(0.50, 0.40)
-    sd_eps = c(5, sqrt(29))
+    sd_eps = c(4, 5)
     # sd_eps = c(3, sqrt(13))
   }
 

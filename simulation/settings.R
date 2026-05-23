@@ -46,7 +46,7 @@ all.config <- bind_rows(
     n_patients = 80,
     beta_delta_idx = 1:3, 
     rho_source = c(0.5, 0.8), 
-    re_factor = c(1, 2), 
+    re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.5,
     outlier_rate2 = 0.2,
@@ -63,7 +63,7 @@ all.config <- bind_rows(
     n_patients = 80,
     beta_delta_idx = 1:3, 
     rho_source = c(0.5, 0.8), 
-    re_factor = c(1, 2), 
+    re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.5,
     outlier_rate2 = 0.2,
@@ -81,14 +81,14 @@ all.config <- bind_rows(
     n_patients = 80,
     beta_delta_idx = 1:3, 
     rho_source = c(0.5, 0.8), 
-    re_factor = c(1, 2), 
+    re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.2,
     outlier_rate2 = 0.5,
     outlier_type = 2,
     error_type = 1, # iid
     uni_modal = c(TRUE, FALSE),
-    high_freq = c(FALSE),# c(TRUE, FALSE),
+    high_freq =  c(TRUE, FALSE),
     DGM_type = 1
   ),
   # gmm
@@ -98,14 +98,14 @@ all.config <- bind_rows(
     n_patients = 80,
     beta_delta_idx = 1:3, 
     rho_source = c(0.5, 0.8), 
-    re_factor = c(1, 2), 
+    re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.2,
     outlier_rate2 = 0.5,
     outlier_type = 2,
     error_type = 1, # iid
     uni_modal = c(TRUE, FALSE),
-    high_freq = c(FALSE),# c(TRUE, FALSE),
+    high_freq = c(TRUE, FALSE),
     DGM_type = 1
   ),
   # outlier 3: mixed outliers
@@ -116,14 +116,14 @@ all.config <- bind_rows(
     n_patients = 80,
     beta_delta_idx = 1:3, 
     rho_source = c(0.5, 0.8), 
-    re_factor = c(1, 2), 
+    re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.2, # deprecated
     outlier_rate2 = 0.5, # deprecated
     outlier_type = 3,
     error_type = 1, # iid
     uni_modal = TRUE, # deprecated
-    high_freq = c(FALSE),# c(TRUE, FALSE),
+    high_freq =c(TRUE, FALSE),
     DGM_type = 1
   ),
   # gmm
@@ -133,14 +133,14 @@ all.config <- bind_rows(
     n_patients = 80,
     beta_delta_idx = 1:3, 
     rho_source = c(0.5, 0.8), 
-    re_factor = c(1, 2), 
+    re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.2,
     outlier_rate2 = 0.5,
     outlier_type = 3,
     error_type = 1, # iid
     uni_modal = TRUE,
-    high_freq = c(FALSE),# c(TRUE, FALSE),
+    high_freq = c(TRUE, FALSE),
     DGM_type = 1
   )
 )
