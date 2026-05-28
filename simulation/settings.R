@@ -112,5 +112,5 @@ all.config <- bind_rows(
   )
 )
 
-# which(all.config$gmm_type %in% c(3, 4, 5) & all.config$high_freq)
+# which(all.config$gmm_type %in% c(4, 5) & all.config$high_freq)
 # which(all.config$gmm_type == 1)
