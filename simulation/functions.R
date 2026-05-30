@@ -329,8 +329,11 @@ run_lmm <- function(data_all, type, k = 5, error_type = 1) {
     # oracle
     data_fit <- data_all
     if (error_type == 1) {
+      # fit <- lmer(
+      #   y ~ poly(time, 2, raw = TRUE) + (1 + time || patient/source), data = data_fit
+      # )
       fit <- lmer(
-        y ~ poly(time, 2, raw = TRUE) + (1 + time || patient/source), data = data_fit
+        y ~ poly(time, 2, raw = TRUE) + (1 + time | patient), data = data_fit
       )
     } else if (error_type == 2) {
       fit <- tryCatch({
