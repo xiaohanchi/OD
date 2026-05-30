@@ -339,15 +339,15 @@ run_lmm <- function(data_all, type, k = 5, error_type = 1) {
       fit <- tryCatch({
         lme(
           y ~ poly(time, 2, raw = TRUE),
-          random = list(patient = ~ pdDiag(~ 1 + time), source = ~ 1),
-          correlation = corAR1(form = ~ time | patient/source),
+          random = list(patient = ~ 1 + time),
+          correlation = corAR1(form = ~ time | patient),
           data = data_fit
         )
       }, error = function(e) {
         lme(
           y ~ poly(time, 2, raw = TRUE),
-          random = list(patient = ~ 1, source = ~ 1),
-          correlation = corAR1(form = ~ time | patient/source),
+          random = list(patient = ~ pdDiag(~ 1 + time)),
+          correlation = corAR1(form = ~ time | patient),
           data = data_fit
         )
       })
