@@ -336,18 +336,23 @@ run_lmm <- function(data_all, type, k = 5, error_type = 1) {
         y ~ poly(time, 2, raw = TRUE) + (1 + time | patient), data = data_fit
       )
     } else if (error_type == 2) {
+      data_fit <- data_fit %>% 
+        arrange(patient, time) %>% 
+        group_by(patient) %>% 
+        mutate(time_ar1 = row_number()) %>% 
+        ungroup()
       fit <- tryCatch({
         lme(
           y ~ poly(time, 2, raw = TRUE),
           random = list(patient = ~ 1 + time),
-          correlation = corAR1(form = ~ time | patient),
+          correlation = corAR1(form = ~ time_ar1 | patient),
           data = data_fit
         )
       }, error = function(e) {
         lme(
           y ~ poly(time, 2, raw = TRUE),
-          random = list(patient = ~ pdDiag(~ 1 + time)),
-          correlation = corAR1(form = ~ time | patient),
+          random = list(patient = pdDiag(~ 1 + time)),
+          correlation = corAR1(form = ~ time_ar1 | patient),
           data = data_fit
         )
       })
