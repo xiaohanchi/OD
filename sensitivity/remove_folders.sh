@@ -2,7 +2,7 @@
 
 mkdir empty_dir
 
-for i in $(seq 1 42); do
+for i in $(seq 1 224); do
   if [ -d "jobtype${i}" ]; then
     rsync -a --delete empty_dir/ jobtype${i}/
     rmdir jobtype${i}
