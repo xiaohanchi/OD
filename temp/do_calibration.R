@@ -253,7 +253,7 @@ all.setting <- expand_grid(SRMin, PowerMin)
 
 calibration.res <- all.search(
   n.stage1.lower = 6, n.stage1.upper = 50,
-  n.stage2.lower = 10, n.stage2.upper = 70, step = 2,
+  n.stage2.lower = 10, n.stage2.upper = 70, step = 1,
   N.dose = 2, N.arm = 3, typeI.level = 0.15, NSR.level = 0.1,
   target.Power.min = all.setting$PowerMin[idx00], 
   target.SR.min = all.setting$SRMin[idx00],
