@@ -6,7 +6,7 @@ p_load(
   rjags, runjags, rstan, splines, stringr, mmrm, merTools, emmeans, filelock
 )
 
-load("data_perturbed.RData")
+load("data_perturbed2.RData")
 source("stan_more.R")
 ### LMM ===========================
 run_lmm <- function(data_all, trt.group, type, spline.type = 1) {
