@@ -443,22 +443,24 @@ model {
   r1_rem_raw ~ std_normal();
   to_vector(r_spline_rem_raw) ~ std_normal();
   
+  // spike: Gamma peak at onsite precision; slab: half-Cauchy(5) on SD (+ Jacobian)
   w_r0 ~ beta(1, 1);
   target += log_mix(w_r0,
                   gamma_lpdf(prec_r0_rem | 100, 100 * square(sigma_r0)),
-                  gamma_lpdf(prec_r0_rem | a_slab, b_slab)
+                  student_t_lpdf(sigma_r0_rem | 1, 0, 5)
+                    - 1.5 * log(prec_r0_rem) - log(2)
                  );
-                 
   w_r1 ~ beta(1, 1);
   target += log_mix(w_r1,
                   gamma_lpdf(prec_r1_rem | 100, 100 * square(sigma_r1)),
-                  gamma_lpdf(prec_r1_rem | a_slab, b_slab)
+                  student_t_lpdf(sigma_r1_rem | 1, 0, 5)
+                    - 1.5 * log(prec_r1_rem) - log(2)
                  );
-                 
   w_r_spline ~ beta(1, 1);
   target += log_mix(w_r_spline,
                   gamma_lpdf(prec_r_spline_rem | 100, 100 * square(sigma_r_spline)),
-                  gamma_lpdf(prec_r_spline_rem | a_slab, b_slab)
+                  student_t_lpdf(sigma_r_spline_rem | 1, 0, 5)
+                    - 1.5 * log(prec_r_spline_rem) - log(2)
                  );
   
   // mixture weight
