@@ -133,11 +133,10 @@ predict_splines <- function(new_time, spline_info) {
 
 run.gmm <- function(data_all, trt.group, n_cls = 5, var_inflate = 10, 
                     a0 = 10, type, k1 = 5, k2 = 5, 
-                    sigma_prior = "student_t(1, 0, 5)", 
                     lambda_prior = "student_t(1, 0, 1)",
                     tau_prior = "student_t(1, 0, 1)", 
                     a_slab = "0.1", b_slab = "0.1", seed = 123) {
-  # type = 1: no onsite data (for outlier detection); 
+  # type 2: onsite GMM v2; 4: pooled sGMM v2; 5: pooled sGMM v2 hetero; 11: TL-sGMM semisep5.nocor
   rstan_options(auto_write = TRUE)
   options(mc.cores = parallel::detectCores())
   
@@ -158,7 +157,7 @@ run.gmm <- function(data_all, trt.group, n_cls = 5, var_inflate = 10,
     data_validation <- data_baseline_onsite %>% filter(TRT01P != "TZP MTD")
   }
 
-  if (type %in% c(1:2)) {
+  if (type == 2) {
     df.fit <- df.fit %>% filter(group == "Onsite")
   }
   df.fit$newid <- as.integer(factor(df.fit$id))
@@ -172,20 +171,7 @@ run.gmm <- function(data_all, trt.group, n_cls = 5, var_inflate = 10,
   B_est1 <- predict_splines(new_time = time_est, B_fit1)
   B_fit2 <- set_splines(time = df.fit$time, k = k2)
   B_est2 <- predict_splines(new_time = time_est, B_fit2)
-  if (type %in% c(1)) {
-    # Onsite GMM
-    mcmc_data <- list(
-      y = df.fit$y_obs, x_bl = df.fit$baseline, time = df.fit$time,
-      N = nrow(df.fit), N_test = nrow(data_validation), 
-      n_patients = length(unique(df.fit$newid)),
-      patient_id = df.fit$newid, x_bl_test = data_validation$WEIGHTBL, 
-      B = B_fit1$Z, B_test = B_est1[c(1, 13), ], K = k1
-    )
-    paras <- c("beta0", "beta1", "beta_bl", "b_spline", "r0", "r1","sigma_ref", "sigma_r0", "sigma_r1", "mu_fixed_test", "y_pred_t12")
-    init_fun <- function() {
-      list(sigma_ref = 2)
-    }
-  } else if (type %in% c(2)) {
+  if (type == 2) {
     # Onsite GMM v2
     mcmc_data <- list(
       N_obs = sum(!is.na(df.fit$y_obs)), N_mis = sum(is.na(df.fit$y_obs)),
@@ -202,29 +188,8 @@ run.gmm <- function(data_all, trt.group, n_cls = 5, var_inflate = 10,
     init_fun <- function() {
       list(sigma_ref = 2)
     }
-  } else if (type %in% c(3)) {
-    # Pooled sGMM
-    mcmc_data <- list(
-      n_cls = n_cls, var_inflate = var_inflate, a0 = a0, 
-      y = df.fit$y_obs, time = df.fit$time,
-      x_bl = df.fit$baseline, time = df.fit$time,
-      N = nrow(df.fit), N_test = nrow(data_validation), 
-      n_patients = length(unique(df.fit$newid)),
-      patient_id = df.fit$newid, 
-      x_bl_test = data_validation$WEIGHTBL, 
-      n_ref = sum(df.fit$group == "Onsite"),
-      n_rem = sum(df.fit$group != "Onsite"),
-      idx_ref = which(df.fit$group == "Onsite"), 
-      idx_rem = which(df.fit$group != "Onsite"), 
-      B = B_fit1$Z, B_test = B_est1[c(1, 13), ], K = k1
-    )
-    paras <- c("beta0", "beta1",  "beta_bl", "b_spline", "r0", "r1","sigma_ref", "sigma", "sigma_r0", "sigma_r1", "z", "mu_fixed_test", "y_pred_t12")
-    init_fun <- function() {
-      list(sigma_ref = 2, sigma_rem = 2)
-    }
-    
-  } else if (type %in% c(4:5)) {
-    # Pooled sGMM v2
+  } else if (type %in% c(4, 5, 11)) {
+    # Pooled sGMM v2 / TL-sGMM
     mcmc_data <- list(
       n_cls = n_cls, var_inflate = var_inflate, a0 = a0,
       N_obs = sum(!is.na(df.fit$y_obs)), N_mis = sum(is.na(df.fit$y_obs)),
@@ -246,73 +211,21 @@ run.gmm <- function(data_all, trt.group, n_cls = 5, var_inflate = 10,
     init_fun <- function() {
       list(sigma_ref = 2, sigma_rem = 2)
     }
-    
-  } else if (type %in% c(6:12)) {
-    mcmc_data <- list(
-      n_cls = n_cls, var_inflate = var_inflate, a0 = a0,
-      N_obs = sum(!is.na(df.fit$y_obs)), N_mis = sum(is.na(df.fit$y_obs)),
-      idx_obs = which(!is.na(df.fit$y_obs)), idx_mis = which(is.na(df.fit$y_obs)),
-      y_obs = df.fit$y_obs[!is.na(df.fit$y_obs)], time = df.fit$time,
-      x_bl = df.fit$baseline, time = df.fit$time,
-      N = nrow(df.fit), N_test = nrow(data_validation),
-      n_patients = length(unique(df.fit$newid)),
-      patient_id = df.fit$newid,
-      x_bl_test = data_validation$WEIGHTBL,
-      n_ref = sum(df.fit$group == "Onsite"),
-      n_rem = sum(df.fit$group != "Onsite"),
-      idx_ref = which(df.fit$group == "Onsite"),
-      idx_rem = which(df.fit$group != "Onsite"),
-      B1 = B_fit1$Z, B_test1 = B_est1[c(1, 13), ], K1 = k1,
-      B2 = B_fit2$Z, B_test2 = B_est2[c(1, 13), ], K2 = k2
-    )
-    paras <- c("beta0", "beta1",  "beta_bl", "b_spline", "r0", "r1","sigma_ref", "sigma", "sigma_r0", "sigma_r1", "z", "mu_fixed_test", "y_pred_t12")
-    init_fun <- function() {
-      list(sigma_ref = 2, sigma_rem = 2)
-    }
-    
   }
-  
   
   stan_fit <- stan(
     model_code = case_when(
-      type == 1 ~ sGMM.onsite,
       type == 2 ~ sGMM.onsite.v2,
-      type == 3 ~ sGMM.pool,
       type == 4 ~ sGMM.pool.v2,
       type == 5 ~ sGMM.pool.v2.hetero,
-      type == 6 ~ (str_replace_all(sGMM.transfer6, "sigma_prior", sigma_prior) %>%
-                     str_replace_all("lambda_prior", lambda_prior) %>% 
-                     str_replace_all("tau_prior", tau_prior)),
-      type == 7 ~ (str_replace_all(sGMM.transfer6.semisep, "lambda_prior", lambda_prior) %>% 
-                      str_replace_all("tau_prior", tau_prior)),
-      type == 8 ~ (str_replace_all(sGMM.transfer6.semisep2, "lambda_prior", lambda_prior) %>% 
-                     str_replace_all("tau_prior", tau_prior)),
-      type == 9 ~ (str_replace_all(sGMM.transfer6.semisep3, "lambda_prior", lambda_prior) %>% 
-                     str_replace_all("tau_prior", tau_prior)),
-      type == 10 ~ (str_replace_all(sGMM.transfer6.semisep4, "lambda_prior", lambda_prior) %>% 
-                     str_replace_all("tau_prior", tau_prior)),
       type == 11 ~ (str_replace_all(sGMM.transfer6.semisep5.nocor, "lambda_prior", lambda_prior) %>% 
                       str_replace_all("tau_prior", tau_prior) %>% 
-                      str_replace_all("a_slab", a_slab) %>% str_replace_all("b_slab", b_slab)),
-      type == 12 ~ (str_replace_all(sGMM.transfer6.semisep5, "lambda_prior", lambda_prior) %>% 
-                      str_replace_all("tau_prior", tau_prior) %>% 
-                      str_replace_all("a_slab", a_slab) %>% str_replace_all("b_slab", b_slab)) 
-      # type == 8 ~ (str_replace_all(sGMM.transfer6.heteroRE, "sigma_prior", sigma_prior) %>% 
-      #                str_replace_all("lambda_prior", lambda_prior) %>% 
-      #                 str_replace_all("tau_prior2", tau_prior) %>% str_replace_all("tau_prior", tau_prior)),
-      # type == 9 ~ (str_replace_all(sGMM.transfer6.heteroRE2, "sigma_prior", sigma_prior) %>% 
-      #                 str_replace_all("lambda_prior", lambda_prior) %>% 
-      #                 str_replace_all("tau_prior2", tau_prior) %>% 
-      #                 str_replace_all("tau_prior", tau_prior)),
-      # type == 10 ~ (str_replace_all(sGMM.transfer6.heteroRE2, "sigma_prior", sigma_prior) %>% 
-      #                 str_replace_all("lambda_prior", lambda_prior) %>% 
-      #                 str_replace_all("tau_prior2", "student_t(1, 0, 0.1)") %>% 
-      #                 str_replace_all("tau_prior", tau_prior))
+                      str_replace_all("a_slab", a_slab) %>% str_replace_all("b_slab", b_slab))
     ),
     data = mcmc_data,
     chains = 3,
-    iter = 6500, # 4000,
-    warmup = 1500, # 1000,
+    iter = 6500,
+    warmup = 1500,
     thin = 4,
     seed = seed,
     init = init_fun,
@@ -322,7 +235,7 @@ run.gmm <- function(data_all, trt.group, n_cls = 5, var_inflate = 10,
     verbose = FALSE , refresh = 200
   )
 
-  if (!(type %in% c(1:2))) {
+  if (type != 2) {
     z.mean <- apply(as.matrix(As.mcmc.list(stan_fit, "z")), 2, function(x) {
       tab <- table(factor(x, levels = 1:n_cls))
       tab / length(x)
@@ -384,15 +297,6 @@ main.func <- function(data_all, trt.group, n_cls, var_inflate,
         time     = coalesce(time,     nom_time[VISIT]),
       ) %>%
       bind_rows(data_remote)
-    
-    # data_counts <- data_run %>% filter(source == "Onsite" & TRT01P != "Placebo") %>% 
-    #   group_by(USUBJID) %>%
-    #   summarise(
-    #     n_visits = sum(!is.na(diffw)),
-    #     .groups = "drop"
-    #   )
-    # table(data_counts$n_visits)
-    
   } else if (data.type == 3) {
     # first, last, and week 24 (visit8) measurements 
     data_remote <- data_all %>% filter(source == "Remote") 
@@ -449,7 +353,7 @@ main.func <- function(data_all, trt.group, n_cls, var_inflate,
     output <- run.gmm(
       data_all = data_run, trt.group = trt.group, n_cls = n_cls, 
       var_inflate = var_inflate, a0 = a0, type = gmm.type, k1 = k1, k2 = k2, 
-      sigma_prior = sigma_prior, lambda_prior = lambda_prior, tau_prior = tau_prior,
+      lambda_prior = lambda_prior, tau_prior = tau_prior,
       a_slab = a_slab, b_slab = b_slab, seed = mcmc_seed
     )
   }
@@ -538,41 +442,8 @@ main.func <- function(data_all, trt.group, n_cls, var_inflate,
     
     r0_sd <- summary(output$stan_fit)$summary[c("sigma_r0"), "mean"]
     r1_sd <- summary(output$stan_fit)$summary[c("sigma_r1"), "mean"]
-    
-    # #random
-    # samples_mat <- As.mcmc.list(output$stan_fit, c("y_pred_t12")) %>% as.matrix()
-    # get_re_summary <- function(mat, par_name, y_obs) {
-    #   cols <- mat[, grep(paste0("^", par_name, "\\["), colnames(mat))]
-    #   id_means <- colMeans(cols)
-    #   id_sds <- apply(cols, 2, sd)
-    #   pred_CI <- apply(cols, 2, quantile, probs = c(0.025, 0.975))
-    #   tibble(
-    #     mean_abs = mean(id_means), 
-    #     median_sd = median(id_sds), 
-    #     CI_len = mean(pred_CI[2, ] - pred_CI[1, ]), 
-    #     coverage = mean(y_obs <= pred_CI[2, ] & y_obs >= pred_CI[1, ]) * 100
-    #   )
-    # }
-    # pred_full <- get_re_summary(samples_mat, "y_pred_t12", y_obs = y_obs)
-    # 
-    # #pred
-    # samples_mat <- As.mcmc.list(output$stan_fit, c("mu_fixed_test")) %>% as.matrix()
-    # get_re_summary <- function(mat, par_name) {
-    #   cols <- mat[, grep(paste0("^", par_name, "\\["), colnames(mat))]
-    #   id_means <- colMeans(cols)
-    #   id_sds <- apply(cols, 2, sd)
-    #   tibble(
-    #     pred_bias = mean(id_means - y_obs), 
-    #     pred_rmse = sqrt(mean((id_means - y_obs)^2))
-    #   )
-    # }
-    # pred_res <- get_re_summary(samples_mat, "mu_fixed_test")
-    # pred_bias <- pred_res$pred_bias
-    # pred_rmse <- pred_res$pred_rmse
-    
   }
   
-  # vars_to_round <- c("est_fwc", "se_fwc", "CI_l", "CI_u", "est_auc", "se_auc", "ci_auc", "pred_bias", "pred_rmse", "eps", "pred_full")
   vars_to_round <- c("est_fwc", "se_fwc", "CI_l", "CI_u", "est_auc", "se_auc", "ci_auc", "r0_sd", "r1_sd")
   for (i in seq_along(vars_to_round)) {
     assign(vars_to_round[i], round(get(vars_to_round[i]), 2))
@@ -582,7 +453,6 @@ main.func <- function(data_all, trt.group, n_cls, var_inflate,
     paste0(est_fwc, " (", se_fwc, ", CI: ", CI_l, ", ", CI_u, ")"), 
     paste0(est_auc, " (", se_auc, ", CI: ", ci_auc[1], ", ", ci_auc[2], ")"), 
     r0_sd, r1_sd, convergence
-    # pred_bias, pred_rmse, eps, convergence, unlist(pred_full)
   ) 
   return(list(output = output, summary_res = summary_res))
 }
@@ -638,18 +508,6 @@ all.config <- bind_rows(
     mcmc_seed = c(123, 234, 345, 456, 567)
   ),
   # TL-sGMM
-  # expand.grid(
-  #   trt.group = c(1, 0),
-  #   model.type = 7,
-  #   lmm.type = 1, 
-  #   gmm.type = c(6:10),
-  #   k.knots = c(4),
-  #   data.type = c(1:2),
-  #   sigma_prior = c("student_t(1, 0, 5)"),
-  #   hs_prior = c(1),
-  #   ig_prior = 1, 
-  #   mcmc_seed = c(123, 234, 345, 456, 567)
-  # ),
   expand.grid(
     trt.group = c(1, 0),
     model.type = 7,
