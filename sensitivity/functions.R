@@ -411,7 +411,7 @@ predict_splines <- function(new_time, spline_info) {
 }
 
 run_gmm <- function(data_all, test_data, n_cls = 5, var_inflate = 5,
-                    a0 = 10, a_slab, b_slab, type, k1 = 5, k2 = 3) {
+                    a0 = 10, type, k1 = 5, k2 = 3) {
   rstan_options(auto_write = TRUE)
   options(mc.cores = parallel::detectCores())
   
@@ -459,8 +459,7 @@ run_gmm <- function(data_all, test_data, n_cls = 5, var_inflate = 5,
     model_code = case_when(
       type == 3 ~ sGMM.pool,
       type == 4 ~ sGMM.pool.heteroRE,
-      type == 5 ~ (str_replace_all(sGMM.heteroRE, "a_slab", a_slab) %>% 
-        str_replace_all("b_slab", b_slab))
+      type == 5 ~ sGMM.heteroRE
     ),
     data = mcmc_data,
     chains = 3,

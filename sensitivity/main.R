@@ -445,7 +445,7 @@ main_func <- function(group, n_patients, n_measure_o, n_measure_r, beta_delta,
     method <- paste0("gmm", gmm_type)
     res <- run_gmm(
       data_all = sim_data, test_data = test_data, n_cls = gmm_ncls,
-      var_inflate = 5, a0 = 10, a_slab = "0.001", b_slab = "0.001", k1 = 5, type = gmm_type
+      var_inflate = 5, a0 = 10, k1 = 5, type = gmm_type
     )
     muhat_fixed <- bind_cols(
       time = unique(res$data_fit$time[res$data_fit$group == "Onsite"]), 
