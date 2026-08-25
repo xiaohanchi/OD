@@ -1,4 +1,3 @@
-#### Note: the "consistent scenarios under type 3" have inconsistent `re_factor = 1` with other scenarios, therefore are discarded; the targeted settings are covered in the "outlier 3: mixed outliers" part with beta_delta_idx = 1
 beta_delta_setting <- matrix(
   c(0, 0, 0, 
     -2, 0, 0, 
@@ -6,30 +5,13 @@ beta_delta_setting <- matrix(
 )
 all.config <- bind_rows(
   # outlier 1: sporadic
-  # rlmm
-  expand.grid(
-    model_type = c(1:5),
-    gmm_type = 1,
-    n_patients = 80,
-    beta_delta_idx = c(1, 3), 
-    rho_source = c(0.5, 0.8), 
-    re_factor = 2, # c(1, 2), 
-    remote_inflation = 0,
-    outlier_rate1 = 0.5,
-    outlier_rate2 = 0.2,
-    outlier_type = 1,
-    error_type = 1, # iid
-    uni_modal = TRUE,
-    high_freq = FALSE,
-    DGM_type = 1
-  ),
   # gmm
   expand.grid(
     model_type = 6,
-    gmm_type = c(3:5),
+    gmm_type = 5,
     n_patients = 80,
     beta_delta_idx = c(1, 3), 
-    rho_source = c(0.5, 0.8), 
+    rho_source = 0.8, # c(0.5, 0.8), 
     re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.5,
@@ -38,33 +20,17 @@ all.config <- bind_rows(
     error_type = 1, # iid
     uni_modal = TRUE,
     high_freq = FALSE,
+    gmm_ncls = c(5, 7, 10), 
     DGM_type = 1
   ),
   # outlier 2: uni-modal recurring
-  # rlmm
-  expand.grid(
-    model_type = c(1:5),
-    gmm_type = 1,
-    n_patients = 80,
-    beta_delta_idx = c(1, 3), 
-    rho_source = c(0.5, 0.8), 
-    re_factor = 2, # c(1, 2), 
-    remote_inflation = 0,
-    outlier_rate1 = 0.2,
-    outlier_rate2 = 0.5,
-    outlier_type = 2,
-    error_type = 1, # iid
-    uni_modal = c(TRUE, FALSE),
-    high_freq =  c(TRUE, FALSE),
-    DGM_type = 1
-  ),
   # gmm
   expand.grid(
     model_type = 6,
-    gmm_type = c(3:5),
+    gmm_type = 5,
     n_patients = 80,
     beta_delta_idx = c(1, 3), 
-    rho_source = c(0.5, 0.8), 
+    rho_source = 0.8, # c(0.5, 0.8), 
     re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.2,
@@ -73,33 +39,17 @@ all.config <- bind_rows(
     error_type = 1, # iid
     uni_modal = c(TRUE, FALSE),
     high_freq = c(TRUE, FALSE),
+    gmm_ncls = c(5, 7, 10), 
     DGM_type = 1
   ),
   # outlier 3: mixed outliers
-  # rlmm
-  expand.grid(
-    model_type = c(1:5),
-    gmm_type = 1,
-    n_patients = 80,
-    beta_delta_idx = c(1, 3), 
-    rho_source = c(0.5, 0.8), 
-    re_factor = 2, # c(1, 2), 
-    remote_inflation = 0,
-    outlier_rate1 = 0.2, # deprecated
-    outlier_rate2 = 0.5, # deprecated
-    outlier_type = 3,
-    error_type = 1, # iid
-    uni_modal = TRUE, # deprecated
-    high_freq =c(TRUE, FALSE),
-    DGM_type = 1
-  ),
   # gmm
   expand.grid(
     model_type = 6,
-    gmm_type = c(3:5),
+    gmm_type = 5,
     n_patients = 80,
     beta_delta_idx = c(1, 3), 
-    rho_source = c(0.5, 0.8), 
+    rho_source = 0.8, # c(0.5, 0.8), 
     re_factor = 2, # c(1, 2), 
     remote_inflation = 0,
     outlier_rate1 = 0.2,
@@ -108,6 +58,7 @@ all.config <- bind_rows(
     error_type = 1, # iid
     uni_modal = TRUE,
     high_freq = c(TRUE, FALSE),
+    gmm_ncls = c(5, 7, 10), 
     DGM_type = 1
   )
 )
